@@ -1,0 +1,3 @@
+Daily_Quote should give basic quote information on 
+a specified stock.
+

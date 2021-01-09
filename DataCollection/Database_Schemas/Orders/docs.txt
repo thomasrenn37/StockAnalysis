@@ -1,0 +1,4 @@
+Orders template should group open orders with their respecitve
+closed orders in order to track (+/-).  Also include averaging down
+if there are multiple orders.
+

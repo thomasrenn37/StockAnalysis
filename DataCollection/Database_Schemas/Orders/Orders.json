@@ -1,0 +1,15 @@
+{
+    "Position Open": true,
+    "Gain/Loss (%)": 0.0,
+    "Date Opened": "new Date()",
+    "Date Closed": "new Date/ NUll",
+    "Instrument Type": "Stock/Option",
+    "Ticker Symbol": "MSFT",
+    "Cost Basis": 0.0,
+    "Orders": [
+        {
+        "Date Ordered": "new Date()",
+        "Number of Shares": 0
+        }
+    ]
+}

@@ -1,0 +1,9 @@
+Data
+Client/config.ini
+Client/ClientLogs
+__pycache__
+Client/__pycache__
+DataCollection/__pycache__
+DataCollection/ParseSEC.log
+logs
+.vscode
