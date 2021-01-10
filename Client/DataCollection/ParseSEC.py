@@ -20,7 +20,7 @@ import logging
 SEC_BASE_ARCHIVE_URL = r"https://www.sec.gov/Archives/edgar/data/"
 
 # Text file that contains the CIK number associated with diferent ticker symbols.
-PATH_TO_SYMBOLS_TICKERS = r"C:\Users\rennt\Desktop\StockPrograms\Data\ticker.txt"
+PATH_TO_SYMBOLS_TICKERS = "ticker.txt"
 
 # Indexes for the ticker table object to parse a text file delimited by spaces.
 TICKER_INDEX = 0

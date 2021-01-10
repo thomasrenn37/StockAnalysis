@@ -10,6 +10,9 @@ import requests
 from enum import Enum
 import datetime
 import os
+import dataManagement
+from dataManagement import DataBaseClientType
+
 
 
 DAY_FACTOR = 86400.0
@@ -25,11 +28,11 @@ class Frequency(Enum):
 
 class DownloadHistoricalStock:
     """ Only works as back as far January 2nd, 2015. """
-    def __init__(self):
+    def __init__(self, databaseClient: DataBaseClientType):
         self.url = "https://query1.finance.yahoo.com/v7/finance/download/{symbol}?period1={p1}&period2={p2}&interval=1d&events=history"
         
-        if databaseClient = MONGO:
-            self.dBClient = MongoClient() 
+        if databaseClient == DataBaseClientType.MongoDB:
+            self.dBClient = dataManagment.MongoDB()
         else:
             raise TypeError("Error initializing with ")
 
@@ -38,9 +41,6 @@ class DownloadHistoricalStock:
         difference = date - START_DATE_OBJECT
         dayInt = START_DATE_INT + (difference.days * DAY_FACTOR)
         return int(dayInt)
-        
-    def _downloadToData(self):
-        pass
 
     def download(self, tickerSymbol: str, startDate: datetime.date, endDate: datetime.date):
         """
@@ -73,16 +73,16 @@ class DownloadHistoricalStock:
         if response.status_code != 200:
             raise requests.RequestException(f"Error status code: {response.status_code}")
     
-
+        
+        #self.dBClient.writeStockQuotes(response)
+        print(response.json())
         
         
-            
         
         # Works up to here
 
 
-
-
+        """
         # Creates the data folder for the ticker symbol.
         tickerPath = DATA_DIRECTORY + f'\\{tickerSymbol}'
         fileName = f"{startDate}__{endDate}"
@@ -94,5 +94,11 @@ class DownloadHistoricalStock:
         print(filePath)
         with open(filePath, 'w') as f:
             f.write(response.text)
-        
+        """
         response.close()
+
+"""
+if __name__ == "__main__":
+    dhs = DownloadHistoricalStock(DataBaseClientType.MongoDB)
+    dhs.download()
+"""

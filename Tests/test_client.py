@@ -1,12 +1,16 @@
-import sys
-sys.path.append(r"C:\Users\rennt\Desktop\StockPrograms\Client")
+import context
+from context import client
 import unittest
-import DataCollection.ParseSEC as ps
+
+
 import Client.etradeClient as client
 import Client.analysis as Analysis
 import Client.portfolio as pf
 import DataCollection.YahooFinance as yf
 import datetime
+
+
+
 
 
 class TestSECParcer(unittest.TestCase):
@@ -27,10 +31,12 @@ class TestSECParcer(unittest.TestCase):
     """
     
     def testOrder(self):
+        """
         etrade = client.EtradeClient(False)
         etrade.placeEquityOrder(190, 1, "MSFT")
-
+        """
         
 
 if __name__ == "__main__":
-    unittest.main(warnings='ignore')
+    # unittest.main(warnings='ignore')
+    unittest.main()

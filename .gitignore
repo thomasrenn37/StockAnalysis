@@ -1,10 +1,10 @@
 Data
-Client/config.ini
-Client/ClientLogs
 __pycache__
+config.ini
+Client/ClientLogs
 Client/__pycache__
-DataCollection/__pycache__
-DataCollection/config.ini
-DataCollection/ParseSEC.log
+Client/DataCollection/__pycache__
+Client/DataCollection/config.ini
+Client/DataCollection/ParseSEC.log
 logs
 .vscode

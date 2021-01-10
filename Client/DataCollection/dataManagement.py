@@ -6,8 +6,13 @@ Usable Clients: MongoDB.
 
 """
 from pymongo import MongoClient
+from typing import IO
 from abc import ABC
+from enum import Enum
 
+class DataBaseClientType(Enum):
+    """ Different database providers that are availalbe. """
+    MONGODB = 0
 
 
 class DatabaseClient(ABC):
@@ -21,11 +26,13 @@ class DatabaseClient(ABC):
     def writeStockQuotes(self):
         raise NotImplementedError("Implement method.")
 
+
 class MonogDB(DatabaseClient):
     def __init__(self):
         super.__init__()
 
-    def writeStockQuotes(self, file_stream):
-        if 
+    def writeStockQuotes(self, file_stream: IO):
+        """ Writes a stock quote to a database. """
+        print(file_stream.name)
         
         
