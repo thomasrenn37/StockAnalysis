@@ -4,6 +4,7 @@ Client/ClientLogs
 __pycache__
 Client/__pycache__
 DataCollection/__pycache__
+DataCollection/config.ini
 DataCollection/ParseSEC.log
 logs
 .vscode

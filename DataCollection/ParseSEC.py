@@ -1,5 +1,5 @@
 """
-Parses the SEC archives to find relevant forms on companies
+Parses the SEC archives to find relevant forms on companies. 
 
 """
 import requests
