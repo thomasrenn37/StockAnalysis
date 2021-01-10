@@ -74,7 +74,7 @@ class Option(Equity):
 class Portfolio:
     def __init__(self, cash: Cash):
         self.__stocks = []
-        self._)options = []
+        self.__options = []
         self.__cash = 0
         self.__totalValue = 0
         

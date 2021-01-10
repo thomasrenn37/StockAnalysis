@@ -1,4 +1,4 @@
 
 
-
-import DataCollection.ParseSEC as ps
+import context
+import ParseSEC as ps

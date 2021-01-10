@@ -3,9 +3,9 @@ from context import client
 import unittest
 
 
-import Client.etradeClient as client
-import Client.analysis as Analysis
-import Client.portfolio as pf
+import etradeClient as client
+import analysis as Analysis
+import portfolio as pf
 import DataCollection.YahooFinance as yf
 import datetime
 
