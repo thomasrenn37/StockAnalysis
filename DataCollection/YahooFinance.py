@@ -10,8 +10,6 @@ import requests
 from enum import Enum
 import datetime
 import os
-import pymongo
-
 
 
 DAY_FACTOR = 86400.0
@@ -29,6 +27,11 @@ class DownloadHistoricalStock:
     """ Only works as back as far January 2nd, 2015. """
     def __init__(self):
         self.url = "https://query1.finance.yahoo.com/v7/finance/download/{symbol}?period1={p1}&period2={p2}&interval=1d&events=history"
+        
+        if databaseClient = MONGO:
+            self.dBClient = MongoClient() 
+        else:
+            raise TypeError("Error initializing with ")
 
     def __dayToInt(self, date: datetime.date) -> int:
         """ Converts the date to the integer representation for url parameter. """
@@ -71,8 +74,9 @@ class DownloadHistoricalStock:
             raise requests.RequestException(f"Error status code: {response.status_code}")
     
 
-
-
+        
+        
+            
         
         # Works up to here
 
