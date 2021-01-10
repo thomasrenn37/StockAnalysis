@@ -1,13 +1,8 @@
 # StockPrograms
-
-There are two core functionalites of this repository.
-
-- The Client object (currently only available for the eTrade API)
-- Data Collection
-
+This repository is in progress for working with the eTrade developer API.
 
 ## Client
 TODO: 
-## Data Collection
-Stuff...
+## Tests
+Uses unittests to test database functionality.
 

@@ -9,7 +9,6 @@ TODO: COMPLETE transition from storing in text files to MongoDB.
 import requests
 from enum import Enum
 import datetime
-import os
 import dataManagement
 from dataManagement import DataBaseClientType
 
@@ -31,8 +30,9 @@ class DownloadHistoricalStock:
     def __init__(self, databaseClient: DataBaseClientType):
         self.url = "https://query1.finance.yahoo.com/v7/finance/download/{symbol}?period1={p1}&period2={p2}&interval=1d&events=history"
         
-        if databaseClient == DataBaseClientType.MongoDB:
-            self.dBClient = dataManagment.MongoDB()
+        # Select available database client.
+        if databaseClient is DataBaseClientType.MONGODB:
+            self.dBClient = dataManagement.MongoDB()
         else:
             raise TypeError("Error initializing with ")
 

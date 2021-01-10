@@ -21,6 +21,7 @@ import analysis
 from client import Client
 
 
+"""
 # Debugging Logging settings
 logger = logging.getLogger("client")
 logger.setLevel(logging.INFO)
@@ -29,6 +30,7 @@ hand.setLevel(logging.INFO)
 debugging_fmt = logging.Formatter("%(asctime)s: %(message)s")
 hand.setFormatter(debugging_fmt)
 logger.addHandler(hand)
+"""
 
 # Parses the configuration file for etrade account info
 config = configparser.ConfigParser()

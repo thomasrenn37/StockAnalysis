@@ -5,6 +5,7 @@ Describes an order type.
 
 
 """
+from enum import Enum
 
 class OrderType(Enum):
     EQ = 1

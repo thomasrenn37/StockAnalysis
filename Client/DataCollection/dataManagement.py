@@ -27,9 +27,9 @@ class DatabaseClient(ABC):
         raise NotImplementedError("Implement method.")
 
 
-class MonogDB(DatabaseClient):
+class MongoDB(DatabaseClient):
     def __init__(self):
-        super.__init__()
+        self.client = MongoClient()
 
     def writeStockQuotes(self, file_stream: IO):
         """ Writes a stock quote to a database. """
