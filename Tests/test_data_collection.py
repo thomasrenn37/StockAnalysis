@@ -12,21 +12,20 @@ from context import DataBaseClientType
 
 
 class Test_YahooFinance_MonogoDB(unittest.TestCase):
-    
+    def setUp(self):
+        self.client = yf.DownloadHistoricalStock(DataBaseClientType.MONGODB)
+
     def test_MongoDB(self):
-        client = yf.DownloadHistoricalStock(DataBaseClientType.MONGODB)
-        self.assertEqual(type(client.dBClient), type(dataManagement.MongoDB()))
+        self.assertEqual(type(self.client.dBClient), type(dataManagement.MongoDB()))
     
     def test_download(self):
-        pass
-        """
-        tickerSymbol = "MSFT"
-        startDate = datetime.date(########)
-        endDate = datetime.date(######)
+        print("\nTesting download")
+        tickerSymbol = "TSLA"
+        startDate = datetime.date(2020, 1, 10)
+        endDate = datetime.date(2021, 1, 10)
 
-
-        client.download()
-        """
+        self.client.download(tickerSymbol, startDate, endDate)
+        
 
 
 

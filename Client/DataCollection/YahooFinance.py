@@ -72,11 +72,9 @@ class DownloadHistoricalStock:
         # Checks for invalid request.
         if response.status_code != 200:
             raise requests.RequestException(f"Error status code: {response.status_code}")
-    
-        
-        #self.dBClient.writeStockQuotes(response)
-        print(response.json())
-        
+            
+
+        self.dBClient.writeStockQuotes(tickerSymbol, response.text, ".csv")
         
         
         # Works up to here
