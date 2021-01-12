@@ -20,7 +20,7 @@ class Test_YahooFinance_MonogoDB(unittest.TestCase):
     
     def test_download(self):
         print("\nTesting download")
-        tickerSymbol = "TSLA"
+        tickerSymbol = "AMZN"
         startDate = datetime.date(2020, 1, 10)
         endDate = datetime.date(2021, 1, 10)
 
