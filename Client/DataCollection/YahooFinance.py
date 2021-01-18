@@ -7,7 +7,7 @@ import requests
 from enum import Enum
 import datetime
 import dataManagement
-from dataManagement import DataBaseClientType
+from dataManagement import DatabaseClient
 
 
 class Frequency(Enum):
@@ -23,14 +23,9 @@ class DownloadHistoricalStock:
     START_DATE_INT = 1420156800 # Jan 2, 2015
     START_DATE_OBJECT = datetime.date(2015, 1, 2) 
 
-    def __init__(self, databaseClient: DataBaseClientType):
+    def __init__(self, databaseClient: DatabaseClient):
         self.url = "https://query1.finance.yahoo.com/v7/finance/download/{symbol}?period1={p1}&period2={p2}&interval=1d&events=history"
-        
-        # Select available database client.
-        if databaseClient is DataBaseClientType.MONGODB:
-            self.dBClient = dataManagement.MongoDB()
-        else:
-            raise TypeError("Error initializing with ")
+        self.dBClient = databaseClient
 
     def __dayToInt(self, date: datetime.date) -> int:
         """ Converts the date to the integer representation for url parameter. """

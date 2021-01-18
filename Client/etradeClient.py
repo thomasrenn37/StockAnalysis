@@ -16,13 +16,59 @@ import random, string
 # User defined libraries
 import portfolio as p
 import analysis
-from client import Client
+from abc import ABC, abstractmethod
 
 
 def printJson(text: str):
     """ Helper function for debugging."""
     jObj = json.loads(text)
     print(json.dumps(jObj, indent=4))
+
+
+class Client(ABC):
+    """
+        Abstract class used to define a client object that can access a  single
+        brokerage account and perform operations for that specific account.
+    """
+    def __init__(self):
+        self.porfolio = self._getPortfolio()
+        self.indicators = []
+        super(Client, self).__init__()
+
+    @abstractmethod
+    def _getPortfolio(self):
+        pass
+
+    def placeOptionOrder(self, limitPrice: float, quantity: int, symbol: str):
+        raise NotImplementedError("Implement method.")
+
+    def UpdatePortfolioValue(self, tickerSymbols: List[str]) -> None:
+        raise NotImplementedError("Implement method.")
+
+    def cancelExistingOrders(self, orderID: int):
+        raise NotImplementedError("Implement method.")
+
+    def changeOrder(self, orderNumber: str):
+        raise NotImplementedError("Implement method.")
+
+    def placeStockOrder(self, limitPrice: float, quantity: int, symbol: str):
+        raise NotImplementedError("Implement method.")
+
+    def placeOptionOrder(self, limitPrice: float, quantity: int, symbol: str):
+        raise NotImplementedError("Implement method.")
+
+    def recordDailyPerformance(self):
+        """ Returns a dictionairy, where keys desd"""
+        pass
+
+    def addIndicator(self, indicator: analysis.Indicators):
+        self.indicators.append(indicator)
+
+    def listIndicators(self) -> list:
+        indicators = []
+        for ind in self.indicators:
+            indicators.append(ind)
+        return indicators
 
 
 # --------------------------------------------------
@@ -272,17 +318,3 @@ class StatusCodeError(Exception):
     def __init__(self, status_code):
         self.message = f"Request Status Code Error Number: {status_code}"
         super().__init__(self.message)
-
-    
-
-
-def main():
-    etrade = EtradeClient()
-
-    
-
-
-
-
-if __name__ == "__main__":
-    main()

@@ -28,11 +28,11 @@ class DatabaseClient(ABC):
     def writeText(self, tickerSymbol: str, text: str, separatorType: str):
         raise NotImplementedError("Implement method.")
 
-    def __writeDeliminatedEntry(self, tickerSymbol: str, text: str, seperator: str):
+    def getCIK(self, tickerSymbol: str) -> str:
         raise NotImplementedError("Implement method.")
 
-    def __writeStockQuote(self, tickerSymbol: str, separatedLines: list[str], separator: str):
-        raise NotImplementedError("Implement method.")
+    def parseDate(self, date: str) -> datetime.date:
+        return datetime.datetime.strptime(date, "%Y-%m-%d")
 
 
 class MongoDB(DatabaseClient):
@@ -123,7 +123,6 @@ class MongoDB(DatabaseClient):
         """ Values are hard coded becasue format should never change. """
         # Create or get the current collection.
         self.StocksDB["CIK_ID"].drop()
-        
         cik_collection = self.StocksDB["CIK_ID"]
         
         for line in separatedLines:
@@ -135,9 +134,6 @@ class MongoDB(DatabaseClient):
                 "CIK": int(values[1])
             }
             cik_collection.insert_one(entry)
-
-    def parseDate(self, date: str) -> datetime.date:
-        return datetime.datetime.strptime(date, "%Y-%m-%d")
 
     def getCIK(self, tickerSymbol: str) -> str:
         """ 
