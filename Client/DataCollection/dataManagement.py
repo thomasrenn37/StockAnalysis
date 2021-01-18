@@ -25,10 +25,13 @@ class DatabaseClient(ABC):
     def __init__(self):
         raise NotImplementedError("DatabaseClient is an abstract base class and therefore should not be instansiated.")
 
-    def writeStockQuotes(self):
+    def writeText(self, tickerSymbol: str, text: str, separatorType: str):
         raise NotImplementedError("Implement method.")
 
-    def __writeCSV(self, text: str):
+    def __writeDeliminatedEntry(self, tickerSymbol: str, text: str, seperator: str):
+        raise NotImplementedError("Implement method.")
+
+    def __writeStockQuote(self, tickerSymbol: str, separatedLines: list[str], separator: str):
         raise NotImplementedError("Implement method.")
 
 
@@ -37,7 +40,7 @@ class MongoDB(DatabaseClient):
         self.client = MongoClient()
         self.StocksDB = self.client["Stocks"]
 
-    def writeStockQuotes(self, tickerSymbol: str, text: str, separatorType: str):
+    def writeText(self, tickerSymbol: str, text: str, sep: str):
         """  
             Writes a stock quote to a database based on a separatorType.
             
@@ -48,24 +51,40 @@ class MongoDB(DatabaseClient):
                 
                 text: The text that is being parsed.
 
-                separatorType: (.csv)
+                sep: Separator the text file is deliminated by
         """
-        if separatorType == ".csv":
-            self.__writeCSV(tickerSymbol,text)
+        separators = [",", None]
+
+        if sep in separators:
+            self.__writeDeliminatedEntry(tickerSymbol, text, sep)
         else:
             print("Error writing to database.")
         
-    def __writeCSV(self, tickerSymbol: str, text: str):
+    def __writeDeliminatedEntry(self, tickerSymbol: str, text: str, separator: str):
         """
-            Writes an entry to the Stocks database in the following format.
+            Writes an entry to the Stocks database. Format is specified
+            by other helper functtion.
 
             ----------------------------------------------------------------------
             Params:
                 tickerSymbol: Ticker symbol that represents the specified publicly
                               traded companies.
                 text: The text that is being parsed.
-            -----------------------------------------------------------------------
 
+        """
+        # Separate the lines from the file.
+        separatedLines = text.split(sep='\n')
+
+        if separator == ",":
+            self.__writeStockQuote(tickerSymbol, separatedLines, separator)
+        elif separator == None:
+            self.__writeCIK(separatedLines, separator)
+        
+    def __writeStockQuote(self, tickerSymbol: str, separatedLines: list[str], separator: str):
+        """
+            Sideaffect: Removes the first element from separatedLines.
+
+            -----------------------------------------
             Entry format example:
             {
                 Date: 2020-02-10T00:00:00.000+00:00
@@ -79,17 +98,14 @@ class MongoDB(DatabaseClient):
         """
         # Create or get the current collection.
         stockCollection = self.StocksDB[tickerSymbol]
-        
-        # Separate the lines from the file.
-        separatedLines = text.split(sep='\n')
 
         # Get the data titles and remove the first line from the list.
-        headers = separatedLines[0].split(',')
+        headers = separatedLines[0].split(separator)
         separatedLines.pop(0)
 
         # Create and insert an entry for each individual stock quote.
         for line in separatedLines:
-            values = line.split(',')
+            values = line.split(separator)
 
             # Database entry
             entry = {
@@ -103,6 +119,36 @@ class MongoDB(DatabaseClient):
             }
             stockCollection.insert_one(entry)
 
+    def __writeCIK(self, separatedLines: list[str], separator: str):
+        """ Values are hard coded becasue format should never change. """
+        # Create or get the current collection.
+        self.StocksDB["CIK_ID"].drop()
+        
+        cik_collection = self.StocksDB["CIK_ID"]
+        
+        for line in separatedLines:
+            values = line.split(separator)
+
+            # Database entry
+            entry = {
+                "Symbol": str(values[0]).upper(),
+                "CIK": int(values[1])
+            }
+            cik_collection.insert_one(entry)
+
     def parseDate(self, date: str) -> datetime.date:
         return datetime.datetime.strptime(date, "%Y-%m-%d")
+
+    def getCIK(self, tickerSymbol: str) -> str:
+        """ 
+            Returns the string reperesentation of the CIK number
+            for a companies ticker symbol.
+        """
+        cik_collection = self.StocksDB["CIK_ID"]
+        document = cik_collection.find_one({"Symbol": tickerSymbol.upper()})
+
+        if document is None:
+            return None
+        else:
+            return str(document["CIK"])
         

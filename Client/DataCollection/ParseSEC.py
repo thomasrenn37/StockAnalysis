@@ -10,73 +10,53 @@ import datetime
 from bs4 import BeautifulSoup
 import time
 import re
-import logging
+from dataManagement import DatabaseClient
 
-# Logging Settings
-#logging.basicConfig(filename="ParseSEC.log", level=logging.DEBUG)
-
-
-# Base archive url for the SEC EDGAR database.
-SEC_BASE_ARCHIVE_URL = r"https://www.sec.gov/Archives/edgar/data/"
-
-# Text file that contains the CIK number associated with diferent ticker symbols.
-PATH_TO_SYMBOLS_TICKERS = "ticker.txt"
-
-# Indexes for the ticker table object to parse a text file delimited by spaces.
-TICKER_INDEX = 0
-CIK_INDEX = 1
-DELIMINATOR = None
-
-class TickerTable(dict):
-    """ Should only be used with the SEC website. """
-    def __init__(self):
-        self._tickerTable = self._getTickerTable()
-
-    def __getitem__(self, item: str):
-        return self._tickerTable[item]
-
-    def _getTickerTable(self):
-
-        table = {}
-        with open(PATH_TO_SYMBOLS_TICKERS) as fp:
-            for line in fp:
-                symbol_CIK = line.split(DELIMINATOR)
-                table.setdefault(symbol_CIK[TICKER_INDEX], symbol_CIK[CIK_INDEX])
-                
-        return table
-
-    def __setitem__(self, item):
-        raise NotImplementedError("Can't set item.")
-    
 
 class FormType(Enum):
-    ten_K = 0
-    ten_Q = 1
-    eight_K = 2
-    NoForm = 100
+    TEN_K = 0
+    TEN_Q = 1
+    EIGHT_K = 2
+    NO_FORM = 100
 
 
-class Parser:
+class SECParser:
     """ Default parser only parses data past 2015. """
-    def __init__(self, startDate = datetime.datetime(2020, 1, 1), endDate = datetime.datetime.now()):
-        self.tickerTable = TickerTable()
-        self.basePath = SEC_BASE_ARCHIVE_URL
+    # Base archive url for the SEC EDGAR database.
+    SEC_BASE_ARCHIVE_URL = r"https://www.sec.gov/Archives/edgar/data/"
+
+    def __init__(self, databaseClient: DatabaseClient, startDate = datetime.datetime(2020, 1, 1), endDate = datetime.datetime.now()):
+        self.dBClient = databaseClient
         self.startDate = startDate
         self.endDate = endDate
     
-    def getDocumentByCompany(self, form: FormType, tickerSymbol: str):
-        """ Returns a parsed document of relevant information. """
-        CIK = self.tickerTable[tickerSymbol]
-        companyURL = self.basePath + CIK + '/'
-        directoryURL = companyURL + "index.json"
-        
-        # Debugging 
-        logging.debug(f"Company Directory URL: {directoryURL}")
+    def updateCIKs(self):
+        """ Writes the CIK numbers to a database client. """
+        # Url for the CIK to ticker file.
+        response = requests.get("https://www.sec.gov/include/ticker.txt")
+        self.dBClient.writeText("", response.text, None)
 
+    def getDocumentByCompany(self, form: FormType, tickerSymbol: str):
+        """ 
+            Returns a parsed document of relevant information. 
+            --------------------------------------------------
+            Params: 
+                form: The form type to be returned.
+                tickerSymbol: The ticker symbol for a stock. 
+        """
+        # Get the URL for the request.
+        CIK = self.dBClient.getCIK(tickerSymbol)
+        companyURL = self.SEC_BASE_ARCHIVE_URL + CIK + '/index.json'
+        
+        
+        # directoryURL = companyURL + "index.json"
+        
+        """
         # Get the index file for the accession numbers directory
         response = requests.get(directoryURL)
         directoryIndex = response.json()['directory']['item']
         response.close()
+
         for item in directoryIndex:
             accessionNumber = item['name']
             submissionLastChange = datetime.datetime.strptime(item['last-modified'], "%Y-%m-%d %H:%M:%S")
@@ -87,16 +67,10 @@ class Parser:
                 submissionFiles = response.json()["directory"]["item"]
                 response.close()
 
-                # Debugging 
-                logging.debug(f"Accesion Index Directory URL: {submissionIndex}")
-
                 for file in submissionFiles:
                     headerFileURL = None
                     if file["name"][-18:] == "index-headers.html":
                         headerFileURL = accessionURL + file["name"]
-                        
-                        # Debugging
-                        logging.debug(f"Index Header URL: {headerFileURL}")
 
                     if headerFileURL != None:
                         response = requests.get(headerFileURL)
@@ -111,3 +85,5 @@ class Parser:
                 break
 
             time.sleep(0.5)
+        """
+    

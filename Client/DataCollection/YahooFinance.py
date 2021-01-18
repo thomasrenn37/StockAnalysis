@@ -63,7 +63,7 @@ class DownloadHistoricalStock:
         period2 = self.__dayToInt(endDate)
         url = self.url.format(symbol = tickerSymbol, p1 = period1, p2=period2)
         
+        # Writes an entry to a database given a stock quote.
         with requests.get(url) as response:
-            # Checks for invalid request.
             response.raise_for_status()
-            self.dBClient.writeStockQuotes(tickerSymbol, response.text, ".csv")
+            self.dBClient.writeText(tickerSymbol, response.text, ",")

@@ -4,8 +4,6 @@
     Author: Thomas Renn
 
 '''
-import logging
-import logging.handlers as handlers
 import configparser
 import webbrowser
 from rauth import OAuth1Service
@@ -21,34 +19,43 @@ import analysis
 from client import Client
 
 
-"""
-# Debugging Logging settings
-logger = logging.getLogger("client")
-logger.setLevel(logging.INFO)
-hand = handlers.RotatingFileHandler(filename="eTradeClient.Debug", maxBytes=5 * 1024 * 1024, backupCount=3)
-hand.setLevel(logging.INFO)
-debugging_fmt = logging.Formatter("%(asctime)s: %(message)s")
-hand.setFormatter(debugging_fmt)
-logger.addHandler(hand)
-"""
-
-# Parses the configuration file for etrade account info
-config = configparser.ConfigParser()
-config.read(r"C:\Users\rennt\Desktop\StockPrograms\Client\config.ini")
-
-
 def printJson(text: str):
     """ Helper function for debugging."""
     jObj = json.loads(text)
     print(json.dumps(jObj, indent=4))
 
 
-def __oAuth(dev: bool):
+# --------------------------------------------------
+# Etrade Client to place trades and analyze position
+# --------------------------------------------------
+class EtradeClient(Client):
+    """
+    Represents a client to place trades for the etrade platform.
+    """
+    NUMBER_OF_SYMBOLS_PER_CALL = 25
+
+    def __init__(self, dev = True):
+        self.dev = dev
+        
+        # Parses the configuration file for etrade account info
+        config = configparser.ConfigParser()
+        config.read("config.ini")
+        # config.read(r"C:\Users\rennt\Desktop\CurrentStockPrograms\Client\config.ini")
+        
+        self.__accountIdKey = self.__getAccountID()
+        self.__session, self.__base_url = self.__oAuth(dev)
+        self.__porfolio = self.__getPortfolio()
+        super().__init__()
+
+    def __str__(self):
+        """ Prints the portfolio """
+        return str(self.portfolio)
+
+    def __oAuth(dev: bool):
     """ Gets the authorization from the ETrade website to access the API endpoints. Based on the
     default script given on the eTrade documentation website. Returns a authenticated session and 
     base url to make requests to the API endpoints. 
     """
-
     # Used for testing or for production
     if dev:
         base_url = config["DEFAULT"]["SAND_BASE_URL"]
@@ -83,40 +90,18 @@ def __oAuth(dev: bool):
                                   request_token_secret,
                                   params={"oauth_verifier": text_code})
 
-
     return session, base_url
-
-
-# --------------------------------------------------
-# Etrade Client to place trades and analyze position
-# --------------------------------------------------
-class EtradeClient(Client):
-    """
-    Represents a client to place trades for the etrade platform.
-    """
-    NUMBER_OF_SYMBOLS_PER_CALL = 25
-
-    def __init__(self, dev = True):
-        self.dev = dev
-        self.accountIdKey = self._getAccountID()
-        self.session, self.base_url = __oAuth(dev)
-        self.porfolio = self.__getPortfolio()
-        super().__init__()
-
-    def __str__(self):
-        """ Prints the portfolio """
-        return str(self.portfolio)
     
     # -------------------------------------
     # Stock Quote Methods -----------------
     # -------------------------------------
 
-    def _getStockQuote(self, tickerSymbols: List[str]):
+    def __getStockQuote(self, tickerSymbols: List[str]):
         """
             Returns a json object object of quote values for the given
             ticker symbols.
         """
-        url = self.base_url + "/v1/market/quote/"
+        url = self.__base_url + "/v1/market/quote/"
         for i in range(len(tickerSymbols)):
             if i != 0:
                 url += (',' + tickerSymbols[i].name)
@@ -124,34 +109,36 @@ class EtradeClient(Client):
                 url += tickerSymbols[i].name
         url += ".json"
         
-        response = self.session.get(url)
+        response = self.__session.get(url)
         json_object = json.loads(response.text)
-        #logger.info(f"Stock Lookup: {tickerSymbols}")
         return json_object
 
     def __getOptionChain(self, tickerSymbol: str):
         """ TODO: IMplement """
-        url = self.base_url + "/v1/market/optionschains?symbol={" + tickerSymbol + "}"
-        response = self.session.get(url)
+        url = self.__base_url + "/v1/market/optionschains?symbol={" + tickerSymbol + "}"
+        response = self.__session.get(url)
 
         json_object = json.loads(response.text)
         return json_object
-
 
     # ---------------------------------------
     # Portfolio/Account Methods -------------
     # ---------------------------------------
     
-    def _getAccountID(self):
+    def __getAccountID(self) -> str:
         """ Returns the account key of a specified account """
         if self.dev:
             return config["DEFAULT"]["SAND_ACCOUNT_NUMBER"]
         else:
             return config["DEFAULT"]["ACCOUNT_NUMBER"]
 
-    def __getPortfolio(self):
+    def __getPortfolio(self) -> p.Portfolio:
+        """ 
+            Returns a Portfolio object of the current account specified in the
+            instance of the EtradeClient class.
+        """
         # Urls to make requests
-        accountURL = self.base_url + f"/v1/accounts/{self.accountIdKey}"
+        accountURL = self.__base_url + f"/v1/accounts/{self.__accountIdKey}"
         balanceURL = accountURL + f"/balance.json"
         portfolioURL = accountURL + f"/portfolio.json"
         
@@ -160,7 +147,7 @@ class EtradeClient(Client):
 
         # Get the cash balance for the Portfolio container
         params = {"instType": "BROKERAGE", "realTimeNAV": "true"}
-        response = self.session.get(balanceURL, params=params)
+        response = self.__session.get(balanceURL, params=params)
         data = response.json()
 
         if data is not None and "BalanceResponse" in data:
@@ -173,20 +160,20 @@ class EtradeClient(Client):
             raise NotImplementedError("Error retreiving the balance response")
 
         # Get portfolio items
-        response = self.session.get(portfolioURL)
+        response = self.__session.get(portfolioURL)
         if response.status_code == 200:
             data = response.json()
         elif response.status_code == 204: # No data in response
-            self.porfolio = port
+            self.__porfolio = port
             return
         else:
-            raise NotImplementedError("Error retreiving the portfolio values response")
+            raise Exception("Error retreiving the portfolio values response")
 
         # TODO: Append portfolio value to portfolio container
 
     def UpdatePortfolioValue(self, tickerSymbols: List[str]) -> None:
         """ Returns a dictionary of the values of the given stock symbols """
-        data = self._getStockQuote(tickerSymbols)
+        data = self.__getStockQuote(tickerSymbols)
         #print(data)
         
         # TODO: Fix for all ticker symbols once real data available
@@ -203,25 +190,24 @@ class EtradeClient(Client):
     # -------------------------------------
     # Order Methods -----------------------
     # -------------------------------------
-    def _ordersURL(self):
-        return self.base_url + "/v1/accounts/" + self.accountIdKey + "/orders"
+    
+    def __ordersURL(self) -> str:
+        return self.__base_url + "/v1/accounts/" + self.__accountIdKey + "/orders"
 
-    def listOrders(self):
+    def listOrders(self) :
         """ Lists previous orders """
         try:
-            data = self.session.get(self._ordersURL()).json()
+            data = self.__session.get(self.__ordersURL()).json()
         except json.JSONDecodeError:
-            print("Error: Data is None")
-            return
+            data = None
         return data
     
     def cancelExistingOrders(self, orderID: int):
         """ Cancels an existing order given the specified orderID """
-        url = self._ordersURL() + "/cancel"
-        response = self.session.put(url, data={"accountIdKey": orderID})
+        url = self.__ordersURL() + "/cancel"
+        response = self.__session.put(url, data={"accountIdKey": orderID})
         if response.status_code != 200:
             raise StatusCodeError(f"Status code: <{response.status_code}>.")
-        
 
     def changeOrder(self, orderNumber: str):
         pass
@@ -229,10 +215,10 @@ class EtradeClient(Client):
     def placeStockOrder(self, limitPrice: float, quantity: int, symbol: str):
         """ Places a preview and an order of a specified stock. """
         # Step 1: Preview the order
-        url = self._ordersURL() + "/preview.json"
+        url = self.__ordersURL() + "/preview.json"
         order = EquityOrder(limitPrice, quantity, symbol)
         headers = {"Content-Type": "application/json", "consumerKey": config["DEFAULT"]["PROD_CONSUMER_KEY"]}
-        response = self.session.post(url, headers=headers, header_auth=True, data=order.PreviewRequest)
+        response = self.__session.post(url, headers=headers, header_auth=True, data=order.PreviewRequest)
         if response.status_code == 200:
             # Get the order Id
             data = response.json()
@@ -246,8 +232,8 @@ class EtradeClient(Client):
             return
         
         # Step 2: Place the order
-        url = self._ordersURL() + "/place.json"
-        response = self.session.post(url, headers=headers, header_auth=True, data=order.PostRequest(previewId))
+        url = self.__ordersURL() + "/place.json"
+        response = self.__session.post(url, headers=headers, header_auth=True, data=order.PostRequest(previewId))
         if response.status_code == 200:
             data = response.text
             printJson(data)
@@ -259,7 +245,7 @@ class EtradeClient(Client):
             return
     
         # Update buying power
-        self.porfolio.Cash
+        self.__porfolio.Cash
 
         # If successful, update portfolio
 
@@ -282,15 +268,21 @@ class EtradeClient(Client):
 
 
 
-
-
-
-
-
-
 class StatusCodeError(Exception):
     def __init__(self, status_code):
         self.message = f"Request Status Code Error Number: {status_code}"
         super().__init__(self.message)
 
     
+
+
+def main():
+    etrade = EtradeClient()
+
+    
+
+
+
+
+if __name__ == "__main__":
+    main()

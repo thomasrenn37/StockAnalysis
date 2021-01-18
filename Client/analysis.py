@@ -5,6 +5,7 @@ Different indicators that could be add
 """
 from typing import List
 from abc import ABC, abstractmethod
+from DataCollection import dataManagement
 
 
 class Indicators(ABC):
@@ -16,6 +17,7 @@ class Indicators(ABC):
         self.data = data
         self._currentValue = None
         super(Indicators, self).__init__()
+        
 
     @abstractmethod
     def _calculate(self):
