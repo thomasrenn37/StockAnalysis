@@ -14,12 +14,13 @@ from context import parseSEC
 
 class Test_YahooFinance_MonogoDB(unittest.TestCase):
     def setUp(self):
-        self.client = yf.DownloadHistoricalStock(DataBaseClientType.MONGODB)
+        client = dataManagement.MongoDB()
+        self.client = yf.DownloadHistoricalStock(client)
 
     def test_MongoDB(self):
         self.assertEqual(type(self.client.dBClient), type(dataManagement.MongoDB()))
     
-    """
+    
     def test_download(self):
         print("\nTesting download")
         tickerSymbol = "AMZN"
@@ -27,16 +28,16 @@ class Test_YahooFinance_MonogoDB(unittest.TestCase):
         endDate = datetime.date(2021, 1, 10)
 
         self.client.download(tickerSymbol, startDate, endDate)
-    """
 
+"""
 class Test_ParseSEC_MongoDB(unittest.TestCase):
     def test_1(self):
         client = dataManagement.MongoDB()
         parser = parseSEC.SECParser(databaseClient=client)
         #parser.updateCIKs()
-        print(client.getCIK("MSFT"))
-        print(client.getCIK("Aapl"))        
-        
+        parser.getDocumentByCompany("msft")
+        # print(client.getCIK("Aapl"))        
+"""
 
 """
 class Test_ParseSEC_MongoDB(unittest.TestCase):

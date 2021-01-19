@@ -8,8 +8,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 sys.path.insert(1, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Client', 'DataCollection')))
 
 # Client imports
-import analysis
-import client
+# import analysis
+import etradeClient
 
 # Data Collection imports
 import DataCollection

@@ -1,7 +1,3 @@
-"""
-Parses the SEC archives to find relevant forms on companies. 
-
-"""
 import requests
 import bs4
 from enum import Enum
@@ -23,8 +19,8 @@ class FormType(Enum):
 class SECParser:
     """ Default parser only parses data past 2015. """
     # Base archive url for the SEC EDGAR database.
-    SEC_BASE_ARCHIVE_URL = r"https://www.sec.gov/Archives/edgar/data/"
-
+    SEC_BASE_ARCHIVE_URL = "https://www.sec.gov/Archives/edgar/data/"
+    TICKER_PATH = "https://www.sec.gov/include/ticker.txt"
     def __init__(self, databaseClient: DatabaseClient, startDate = datetime.datetime(2020, 1, 1), endDate = datetime.datetime.now()):
         self.dBClient = databaseClient
         self.startDate = startDate
@@ -33,10 +29,10 @@ class SECParser:
     def updateCIKs(self):
         """ Writes the CIK numbers to a database client. """
         # Url for the CIK to ticker file.
-        response = requests.get("https://www.sec.gov/include/ticker.txt")
+        response = requests.get(self.TICKER_PATH)
         self.dBClient.writeText("", response.text, None)
 
-    def getDocumentByCompany(self, form: FormType, tickerSymbol: str):
+    def getDocumentByCompany(self, tickerSymbol: str): # form: FormType,
         """ 
             Returns a parsed document of relevant information. 
             --------------------------------------------------
@@ -46,17 +42,16 @@ class SECParser:
         """
         # Get the URL for the request.
         CIK = self.dBClient.getCIK(tickerSymbol)
-        companyURL = self.SEC_BASE_ARCHIVE_URL + CIK + '/index.json'
+        directoryURL = self.SEC_BASE_ARCHIVE_URL + CIK + '/index.json'
         
-        
-        # directoryURL = companyURL + "index.json"
-        
-        """
         # Get the index file for the accession numbers directory
         response = requests.get(directoryURL)
-        directoryIndex = response.json()['directory']['item']
+        print(response.json()['directory']['item'][1])
+        print(type(response.json()['directory']['item']))
+        # dict_keys(['item', 'name', 'parent-dir'])
         response.close()
 
+        """
         for item in directoryIndex:
             accessionNumber = item['name']
             submissionLastChange = datetime.datetime.strptime(item['last-modified'], "%Y-%m-%d %H:%M:%S")

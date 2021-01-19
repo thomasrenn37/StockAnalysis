@@ -7,7 +7,7 @@ Usable Clients: MongoDB.
 """
 from pymongo import MongoClient
 from typing import IO
-from abc import ABC
+from abc import ABC, abstractmethod
 from enum import Enum
 import datetime
 
@@ -22,23 +22,48 @@ class DatabaseClient(ABC):
     An abstract base class that defines the methods all database clients should provide for
     data access and writing.
     """
-    def __init__(self):
-        raise NotImplementedError("DatabaseClient is an abstract base class and therefore should not be instansiated.")
-
-    def writeText(self, tickerSymbol: str, text: str, separatorType: str):
+    @abstractmethod
+    def getCIK(self, tickerSymbol: str) -> str:
+        raise NotImplementedError("Implement method.")
+    
+    @abstractmethod
+    def __writeStockQuote(self, tickerSymbol: str, separatedLines: list[str], separator: str):
+        """ 
+            
+            To overide this function give the following function declaration:
+            def _DatabaseClient__writeCIK(self, separatedLines: list[str], separator: str):
+                # implementation
+                .
+                .
+                .
+            
+            Prevents the issue of name mangling at the time of definition of the
+            class.
+        
+            Helper function to write a stock quote to a DatabaseClient. """
         raise NotImplementedError("Implement method.")
 
-    def getCIK(self, tickerSymbol: str) -> str:
+    @abstractmethod
+    def __writeCIK(self, separatedLines: list[str], separator: str):
+        """ 
+            Helper function to write the CIK numbers for a publicly traded
+            company to find their SEC filings to a DatabaseClient. 
+            
+            To overide this function give the following function declaration:
+            def _DatabaseClient__writeCIK(self, separatedLines: list[str], separator: str):
+                # implementation
+                .
+                .
+                .
+            
+            Prevents the issue of name mangling at the time of definition of the
+            class.
+            
+        """
         raise NotImplementedError("Implement method.")
 
     def parseDate(self, date: str) -> datetime.date:
         return datetime.datetime.strptime(date, "%Y-%m-%d")
-
-
-class MongoDB(DatabaseClient):
-    def __init__(self):
-        self.client = MongoClient()
-        self.StocksDB = self.client["Stocks"]
 
     def writeText(self, tickerSymbol: str, text: str, sep: str):
         """  
@@ -51,7 +76,8 @@ class MongoDB(DatabaseClient):
                 
                 text: The text that is being parsed.
 
-                sep: Separator the text file is deliminated by
+                sep: Separator the text file is deliminated by. Same meaning 
+                     and use as in the str.split() method.
         """
         separators = [",", None]
 
@@ -59,7 +85,7 @@ class MongoDB(DatabaseClient):
             self.__writeDeliminatedEntry(tickerSymbol, text, sep)
         else:
             print("Error writing to database.")
-        
+
     def __writeDeliminatedEntry(self, tickerSymbol: str, text: str, separator: str):
         """
             Writes an entry to the Stocks database. Format is specified
@@ -79,8 +105,16 @@ class MongoDB(DatabaseClient):
             self.__writeStockQuote(tickerSymbol, separatedLines, separator)
         elif separator == None:
             self.__writeCIK(separatedLines, separator)
+
+
+class MongoDB(DatabaseClient):
+    """ MongoDB database client implementation. """
+    def __init__(self):
+        #super(DatabaseClient, self).__init__()
+        self.client = MongoClient()
+        self.StocksDB = self.client["Stocks"]
         
-    def __writeStockQuote(self, tickerSymbol: str, separatedLines: list[str], separator: str):
+    def _DatabaseClient__writeStockQuote(self, tickerSymbol: str, separatedLines: list[str], separator: str):
         """
             Sideaffect: Removes the first element from separatedLines.
 
@@ -119,7 +153,7 @@ class MongoDB(DatabaseClient):
             }
             stockCollection.insert_one(entry)
 
-    def __writeCIK(self, separatedLines: list[str], separator: str):
+    def _DatabaseClient__writeCIK(self, separatedLines: list[str], separator: str):
         """ Values are hard coded becasue format should never change. """
         # Create or get the current collection.
         self.StocksDB["CIK_ID"].drop()
