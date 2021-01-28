@@ -19,8 +19,8 @@ class Test_YahooFinance_MonogoDB(unittest.TestCase):
 
     def test_MongoDB(self):
         self.assertEqual(type(self.client.dBClient), type(dataManagement.MongoDB()))
-    
-    
+
+    """
     def test_download(self):
         print("\nTesting download")
         tickerSymbol = "AMZN"
@@ -29,7 +29,8 @@ class Test_YahooFinance_MonogoDB(unittest.TestCase):
 
         self.client.download(tickerSymbol, startDate, endDate)
 
-"""
+    """
+
 class Test_ParseSEC_MongoDB(unittest.TestCase):
     def test_1(self):
         client = dataManagement.MongoDB()
@@ -37,7 +38,7 @@ class Test_ParseSEC_MongoDB(unittest.TestCase):
         #parser.updateCIKs()
         parser.getDocumentByCompany("msft")
         # print(client.getCIK("Aapl"))        
-"""
+
 
 """
 class Test_ParseSEC_MongoDB(unittest.TestCase):

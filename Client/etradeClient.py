@@ -1,9 +1,3 @@
-'''
-    Library used for working with the eTrade Api to place trades for the account.
-
-    Author: Thomas Renn
-
-'''
 import configparser
 import webbrowser
 from rauth import OAuth1Service

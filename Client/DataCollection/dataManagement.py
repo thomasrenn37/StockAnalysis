@@ -1,9 +1,9 @@
 """
 Different classes that are used to interface with different
-database providers. 
+database providers. Other implementations must overwrite DatabaseClient
+methods.
 
 Usable Clients: MongoDB.
-
 """
 from pymongo import MongoClient
 from typing import IO
@@ -29,7 +29,6 @@ class DatabaseClient(ABC):
     @abstractmethod
     def __writeStockQuote(self, tickerSymbol: str, separatedLines: list[str], separator: str):
         """ 
-            
             To overide this function give the following function declaration:
             def _DatabaseClient__writeCIK(self, separatedLines: list[str], separator: str):
                 # implementation
@@ -79,7 +78,7 @@ class DatabaseClient(ABC):
                 sep: Separator the text file is deliminated by. Same meaning 
                      and use as in the str.split() method.
         """
-        separators = [",", None]
+        separators = [",", "\t"]
 
         if sep in separators:
             self.__writeDeliminatedEntry(tickerSymbol, text, sep)
@@ -103,14 +102,13 @@ class DatabaseClient(ABC):
 
         if separator == ",":
             self.__writeStockQuote(tickerSymbol, separatedLines, separator)
-        elif separator == None:
+        elif separator == "\t":
             self.__writeCIK(separatedLines, separator)
 
 
 class MongoDB(DatabaseClient):
     """ MongoDB database client implementation. """
     def __init__(self):
-        #super(DatabaseClient, self).__init__()
         self.client = MongoClient()
         self.StocksDB = self.client["Stocks"]
         
