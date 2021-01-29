@@ -19,7 +19,8 @@ def printJson(text: str):
     print(json.dumps(jObj, indent=4))
 
 
-class Client(ABC):
+
+class TradingClient(ABC):
     """
         Abstract class used to define a client object that can access a  single
         brokerage account and perform operations for that specific account.
@@ -68,7 +69,7 @@ class Client(ABC):
 # --------------------------------------------------
 # Etrade Client to place trades and analyze position
 # --------------------------------------------------
-class EtradeClient(Client):
+class EtradeClient(TradingClient):
     """
     Represents a client to place trades for the etrade platform.
     """
@@ -80,7 +81,6 @@ class EtradeClient(Client):
         # Parses the configuration file for etrade account info
         config = configparser.ConfigParser()
         config.read("config.ini")
-        # config.read(r"C:\Users\rennt\Desktop\CurrentStockPrograms\Client\config.ini")
         
         self.__accountIdKey = self.__getAccountID()
         self.__session, self.__base_url = self.__oAuth(dev)
@@ -91,10 +91,14 @@ class EtradeClient(Client):
         """ Prints the portfolio """
         return str(self.portfolio)
 
-    def __oAuth(dev: bool):
-        """ Gets the authorization from the ETrade website to access the API endpoints. Based on the
-        default script given on the eTrade documentation website. Returns a authenticated session and 
-        base url to make requests to the API endpoints. 
+    def __oAuth(dev: bool) -> tuple:
+        """ 
+        Gets the authorization from the ETrade website to access the API endpoints. 
+        Returns a authenticated session and base url to make requests to the API endpoints
+        as a tuple.
+
+        Based on the source code given on the eTrade documentation website that can be found at:
+        https://developer.etrade.com/home 
         """
         # Used for testing or for production
         if dev:
