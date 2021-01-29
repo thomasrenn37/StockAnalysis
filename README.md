@@ -1,5 +1,5 @@
 # StockAnalysis (Need to Know)
-This repository is a side project I have been working on when I have free time with a few different and separate functionalities that do not currently work with a trading client and are not fully functional, but hopefully that changes. This project will contain a collection of stock analysis tools and interfacing with specific brokerages API's.
+This repository is a side project I have been working on when I have free time with a few different and separate functionalities that do not currently work with a trading client and are not fully functional. This project will contain a collection of stock analysis tools and interfacing with specific brokerages API's.
 #
 
 ## Client
