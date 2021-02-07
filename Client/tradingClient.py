@@ -1,22 +1,23 @@
 import configparser
 import webbrowser
-from rauth import OAuth1Service
+from rauth import OAuth1Service, OAuth2Service
 from typing import List
 import sys
 import json
 from enum import Enum
 import random, string
+from abc import ABC, abstractmethod
+import os.path
 
 # User defined libraries
-import portfolio as p
-import analysis
-from abc import ABC, abstractmethod
+import Client.portfolio as p
+import Client.analysis as analysis
 
 
-def printJson(text: str):
+
+def printJson(jsonObj):
     """ Helper function for debugging."""
-    jObj = json.loads(text)
-    print(json.dumps(jObj, indent=4))
+    print(json.dumps(jsonObj, indent=4))
 
 
 
@@ -26,13 +27,7 @@ class TradingClient(ABC):
         brokerage account and perform operations for that specific account.
     """
     def __init__(self):
-        self.porfolio = self._getPortfolio()
-        self.indicators = []
-        super(Client, self).__init__()
-
-    @abstractmethod
-    def _getPortfolio(self):
-        pass
+        super().__init__()
 
     def placeOptionOrder(self, limitPrice: float, quantity: int, symbol: str):
         raise NotImplementedError("Implement method.")
@@ -59,12 +54,13 @@ class TradingClient(ABC):
     def addIndicator(self, indicator: analysis.Indicators):
         self.indicators.append(indicator)
 
+    """
     def listIndicators(self) -> list:
         indicators = []
         for ind in self.indicators:
             indicators.append(ind)
         return indicators
-
+    """
 
 # --------------------------------------------------
 # Etrade Client to place trades and analyze position
@@ -73,25 +69,42 @@ class EtradeClient(TradingClient):
     """
     Represents a client to place trades for the etrade platform.
     """
-    NUMBER_OF_SYMBOLS_PER_CALL = 25
+    __Max_NUMBER_OF_SYMBOLS_PER_CALL = 25
 
     def __init__(self, dev = True):
-        self.dev = dev
+        self.__dev = dev
         
-        # Parses the configuration file for etrade account info
-        config = configparser.ConfigParser()
-        config.read("config.ini")
-        
-        self.__accountIdKey = self.__getAccountID()
-        self.__session, self.__base_url = self.__oAuth(dev)
-        self.__porfolio = self.__getPortfolio()
-        super().__init__()
+        # Parses the configuration file for etrade account configurations.
+        if os.path.exists("Client/config.ini"):
+            self.__config = configparser.ConfigParser()
+            self.__config.read("Client/config.ini")
+        else:
+            exit(0)
+
+        # Setting configurations for instance category.
+        if dev:
+            self.__base_url = self.__config["DEFAULT"]["SAND_BASE_URL"]
+            self.__consumer_key = self.__config["DEFAULT"]["SAND_CONSUMER_KEY"]
+            self.__consumer_secret = self.__config["DEFAULT"]["SAND_CONSUMER_SECRET"]
+            self.__accountIdKey = self.__config["DEFAULT"]["SAND_ACCOUNT_NUMBER"]
+        else:
+            self.__base_url = self.__config["DEFAULT"]["PROD_BASE_URL"]
+            self.__consumer_key = self.__config["DEFAULT"]["PROD_CONSUMER_KEY"]
+            self.__consumer_secret = self.__config["DEFAULT"]["PROD_CONSUMER_SECRET"]
+            self.__accountIdKey = self.__config["DEFAULT"]["ACCOUNT_NUMBER"]
+
+        # Create and verify an oath session.
+        self.__session = self.__oAuth()
+
+        # Populate the portfolio container with current values.
+        #self.__porfolio = self.__getPortfolio()
+        self.indicators = []
 
     def __str__(self):
         """ Prints the portfolio """
         return str(self.portfolio)
 
-    def __oAuth(dev: bool) -> tuple:
+    def __oAuth(self):
         """ 
         Gets the authorization from the ETrade website to access the API endpoints. 
         Returns a authenticated session and base url to make requests to the API endpoints
@@ -100,20 +113,10 @@ class EtradeClient(TradingClient):
         Based on the source code given on the eTrade documentation website that can be found at:
         https://developer.etrade.com/home 
         """
-        # Used for testing or for production
-        if dev:
-            base_url = config["DEFAULT"]["SAND_BASE_URL"]
-            consumer_key = config["DEFAULT"]["SAND_CONSUMER_KEY"]
-            consumer_secret = config["DEFAULT"]["SAND_CONSUMER_SECRET"]
-        else:
-            base_url = config["DEFAULT"]["PROD_BASE_URL"]
-            consumer_key = config["DEFAULT"]["PROD_CONSUMER_KEY"]
-            consumer_secret = config["DEFAULT"]["PROD_CONSUMER_SECRET"]
-
         etrade = OAuth1Service(
             name="etrade",
-            consumer_key=consumer_key,
-            consumer_secret=consumer_secret,
+            consumer_key=self.__consumer_key,
+            consumer_secret=self.__consumer_secret,
             request_token_url="https://api.etrade.com/oauth/request_token",
             access_token_url="https://api.etrade.com/oauth/access_token",
             authorize_url="https://us.etrade.com/e/t/etws/authorize?key={}&token={}",
@@ -134,7 +137,7 @@ class EtradeClient(TradingClient):
                                         request_token_secret,
                                         params={"oauth_verifier": text_code})
 
-        return session, base_url
+        return session
     
     # -------------------------------------
     # Stock Quote Methods -----------------
@@ -145,17 +148,19 @@ class EtradeClient(TradingClient):
             Returns a json object object of quote values for the given
             ticker symbols.
         """
-        url = self.__base_url + "/v1/market/quote/"
-        for i in range(len(tickerSymbols)):
-            if i != 0:
-                url += (',' + tickerSymbols[i].name)
-            else:
-                url += tickerSymbols[i].name
+        url = self.__base_url + "/v1/market/quote/" + tickerSymbols[0]
+
+        for i in range(1, len(tickerSymbols)):
+            url += (',' + tickerSymbols[i])
+
         url += ".json"
         
         response = self.__session.get(url)
         json_object = json.loads(response.text)
         return json_object
+
+    def StockQuote(self, ticker: str):
+        printJson(self.__getStockQuote([ticker]))
 
     def __getOptionChain(self, tickerSymbol: str):
         """ TODO: IMplement """
@@ -169,17 +174,13 @@ class EtradeClient(TradingClient):
     # Portfolio/Account Methods -------------
     # ---------------------------------------
     
-    def __getAccountID(self) -> str:
-        """ Returns the account key of a specified account """
-        if self.dev:
-            return config["DEFAULT"]["SAND_ACCOUNT_NUMBER"]
-        else:
-            return config["DEFAULT"]["ACCOUNT_NUMBER"]
+
 
     def __getPortfolio(self) -> p.Portfolio:
         """ 
             Returns a Portfolio object of the current account specified in the
             instance of the EtradeClient class.
+                
         """
         # Urls to make requests
         accountURL = self.__base_url + f"/v1/accounts/{self.__accountIdKey}"
@@ -253,6 +254,8 @@ class EtradeClient(TradingClient):
         if response.status_code != 200:
             raise StatusCodeError(f"Status code: <{response.status_code}>.")
 
+        return
+
     def changeOrder(self, orderNumber: str):
         pass
 
@@ -294,6 +297,8 @@ class EtradeClient(TradingClient):
         # If successful, update portfolio
 
         pass
+
+
 
     def placeOptionOrder(self, limitPrice: float, quantity: int, symbol: str):
         pass

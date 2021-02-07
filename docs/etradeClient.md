@@ -1,21 +1,8 @@
 etradeClient docs:
     Etrade Client Object methods:
-    
-        - __getStockQuote(List[str]: List of stock ticker symbols.)
-        Returns a json object of the values for the specified ticker symbols.
-
-        - __getOptionChain() - !!!IMPLEMENT!!!
-
-        - __getAccountID() - str 
-        Returns a string of the account id used to get portfolio and orders.
-
-        - __getPortfolio()- IMPLEMENT
 
         - UpdatePortfolioValue()  - IMPLEMENT
         Updates the portolio values
-
-        - __ordersURL()
-        Returns the orders url for use within object.
 
         - listOrders()
         Returns a json object for the current orders.

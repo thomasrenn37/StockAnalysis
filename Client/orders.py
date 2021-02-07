@@ -20,9 +20,17 @@ class Order:
     An order class used to generate order requests via a client object.
 
     """
-    def __init__(self, orderType: OrderType, limitPrice: float, 
-    quantity: int, symbol: str, allOrNone = "false", priceType = "LIMIT", 
-    orderTerm = "GOOD_FOR_DAY", marketSession = "REGULAR", stopPrice = ""):
+    def __init__(self,
+                orderType: OrderType, 
+                limitPrice: float, 
+                quantity: int, 
+                symbol: str, 
+                allOrNone = "false", 
+                priceType = "LIMIT", 
+                orderTerm = "GOOD_FOR_DAY", 
+                marketSession = "REGULAR", 
+                stopPrice = ""):
+
         # Order values
         self._orderType = orderType.name
         self._allOrNone = allOrNone

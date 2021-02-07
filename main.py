@@ -1,10 +1,12 @@
 """
 
 """
-from Client import client
+
+from Client import EtradeClient
 
 def main():
-    pass
+    client = EtradeClient()
+    client.StockQuote("MSFT")
 
 
 if __name__ == "__main__":
