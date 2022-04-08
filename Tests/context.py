@@ -4,17 +4,17 @@
 """
 import os
 import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Client')))
-sys.path.insert(1, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Client', 'DataCollection')))
-
+#sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Client')))
+#print(sys.path)
 # Client imports
-# import analysis
-import etradeClient
+
+from ..Client import analysis as analysis
+from ..Client.tradingClient import tradingClient as client
+from ..Client.portfolio import portfolio as portfolio
 
 # Data Collection imports
-import DataCollection
-import dataManagement
-import parseSEC
-import yahooFinance
+import Client.DataCollection.dataManagement as dataManagement 
+import Client.DataCollection.parseSEC as parseSEC
+import Client.DataCollection.yahooFinance as yahooFinance
 
-from dataManagement import DataBaseClientType
+#from Client.DataCollection.dataManagement import DataBaseClientType

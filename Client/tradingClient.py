@@ -1,8 +1,7 @@
 import configparser
 import webbrowser
-from rauth import OAuth1Service, OAuth2Service
+from rauth import OAuth1Service
 from typing import List
-import sys
 import json
 from enum import Enum
 import random, string
@@ -10,7 +9,7 @@ from abc import ABC, abstractmethod
 import os.path
 
 # User defined libraries
-import Client.portfolio as p
+import Client.portfolio as porfolio
 import Client.analysis as analysis
 
 
@@ -61,6 +60,7 @@ class TradingClient(ABC):
             indicators.append(ind)
         return indicators
     """
+
 
 # --------------------------------------------------
 # Etrade Client to place trades and analyze position
@@ -145,7 +145,7 @@ class EtradeClient(TradingClient):
 
     def __getStockQuote(self, tickerSymbols: List[str]):
         """
-            Returns a json object object of quote values for the given
+            Returns a json object of quote values for the given
             ticker symbols.
         """
         url = self.__base_url + "/v1/market/quote/" + tickerSymbols[0]
