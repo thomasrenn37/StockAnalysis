@@ -3,9 +3,6 @@
 
 """
 import unittest
-import datetime
-
-import context
 from context import dataManagement
 from context import yahooFinance as yf
 from context import DataBaseClientType

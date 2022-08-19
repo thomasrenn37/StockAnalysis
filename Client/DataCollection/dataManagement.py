@@ -27,37 +27,17 @@ class DatabaseClient(ABC):
         raise NotImplementedError("Implement method.")
     
     @abstractmethod
-    def __writeStockQuote(self, tickerSymbol: str, separatedLines: list[str], separator: str):
+    def _writeStockQuote(self, tickerSymbol: str, separatedLines: list[str], separator: str):
         """ 
-            To overide this function give the following function declaration:
-            def _DatabaseClient__writeCIK(self, separatedLines: list[str], separator: str):
-                # implementation
-                .
-                .
-                .
-            
-            Prevents the issue of name mangling at the time of definition of the
-            class.
-        
-            Helper function to write a stock quote to a DatabaseClient. """
+            Helper function to write a stock quote to a DatabaseClient.
+        """
         raise NotImplementedError("Implement method.")
 
     @abstractmethod
-    def __writeCIK(self, separatedLines: list[str], separator: str):
+    def _writeCIK(self, separatedLines: list[str], separator: str):
         """ 
             Helper function to write the CIK numbers for a publicly traded
             company to find their SEC filings to a DatabaseClient. 
-            
-            To overide this function give the following function declaration:
-            def _DatabaseClient__writeCIK(self, separatedLines: list[str], separator: str):
-                # implementation
-                .
-                .
-                .
-            
-            Prevents the issue of name mangling at the time of definition of the
-            class.
-            
         """
         raise NotImplementedError("Implement method.")
 
@@ -89,7 +69,6 @@ class DatabaseClient(ABC):
         """
             Writes an entry to the Stocks database. Format is specified
             by other helper functtion.
-
             ----------------------------------------------------------------------
             Params:
                 tickerSymbol: Ticker symbol that represents the specified publicly
@@ -101,9 +80,9 @@ class DatabaseClient(ABC):
         separatedLines = text.split(sep='\n')
 
         if separator == ",":
-            self.__writeStockQuote(tickerSymbol, separatedLines, separator)
+            self._writeStockQuote(tickerSymbol, separatedLines, separator)
         elif separator == "\t":
-            self.__writeCIK(separatedLines, separator)
+            self._writeCIK(separatedLines, separator)
 
 
 class MongoDB(DatabaseClient):

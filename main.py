@@ -1,19 +1,16 @@
-"""
-import sys
-import os
-#sys.path.insert(0, sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__)))))
-"""
-
-#from Client.tradingClient import EtradeClient
+from Client.tradingClient import EtradeClient
+import time
 
 def main():
-    #client = EtradeClient()
-    #client.StockQuote("MSFT")
+    client = EtradeClient(False)
+    tickers = ['TGT', 'VYM', 'INTC', 'BROS', 'NFLX']
+    quotes = client.getMultipleStockQuotes(tickers)
     
-    #sys.path.pop(0)
-    #print(os.path.abspath(os.path.join(os.path.dirname(__file__))))
-    #print(sys.path)
-    pass
+    for q in quotes:
+        print(f"SYM: {q.symbol} Last: ${q.lastTrade} {time.gmtime(q.dateTimeUTC)}")
+        print(f"volume: {q.averageVolume}")
+        print(f"day low:${q.low} day high:${q.high}")
+        print()
 
 if __name__ == "__main__":
     main()

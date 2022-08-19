@@ -2,10 +2,11 @@
 orders module.
 
 Describes an order type. 
-
-
 """
 from enum import Enum
+import json
+import random
+import string 
 
 class OrderType(Enum):
     EQ = 1

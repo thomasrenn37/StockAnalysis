@@ -155,13 +155,20 @@ class MACD(Indicators):
         pass
 
 
+
+def compoundCalculator(base_amount: float, rate: float, num_years: int, num_freq: int):
+    assert period > 0
+
+    return base_amount * ((1 + (rate / num_freq)) ** (num_years * num_freq)) 
+
+
+
 """
 # Abstact Model class
 class Model(ABC):
     def __init__(self):
 
         super(ABC, self).__init__()
-
 
 
 # Black Scholes Model

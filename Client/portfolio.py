@@ -3,14 +3,8 @@ Classes (see classess for more detail on specifics):
     Equity: The abtract base class used in all of the subclasses of an Equity.
 
 
-
-
-
 Enums: 
     CurrencyType: Used along side with the Currency class for later implementation. TODO
-
-
-
 
 """
 from typing import List, Dict
@@ -25,7 +19,6 @@ class Equity(ABC):
     def __init__(self, name: str, value: float, date_time: datetime.datetime = datetime.datetime.now()):
         self.name = name
         self._value_time = (value, date_time)
-        #super(ABC, self).__init__()
     
     def totalValueAndTime(self):
         return self._value_time
@@ -46,9 +39,7 @@ class Currency(Equity):
         self._buyingPower = self._buyingPower - amount
 
     def __str__(self):
-        #frmt = f"""{str(self.__class__)[-7:-2] :<8}{self.name :>3} {str(self.shares):>6}\
-        #{str(self.currentValue[0]):<16}{self.currentValue[1]}"""
-        frmt = f"Buying Power: {self._buyingPower}\nTotal Cash: {self.totalValue()}"
+        frmt = f"Buying Power: {self._buyingPower}\nTotal Cash: ${self.totalValue()}"
 
         return frmt
 
@@ -71,7 +62,6 @@ class Stock(Equity):
     Field memembers:
         _num_shares (int): the number of shares of the stock.
 
-
     Inherits field values: 
         name (str): The ticker symbol for the stock.
         _value_time (Tuple (float, datetime)): the value of the stock at a datetime.
@@ -81,14 +71,14 @@ class Stock(Equity):
         self._num_shares = shares
         Equity.__init__(self, ticker_symbol.upper(), value)
 
-    def perShareCost(self) -> float:
+    def avgerageCost(self) -> float:
         """ Returns the cost per share for the stock. """
         return self.totalValue() / self._num_shares
 
-    def percentageGain(self) -> float:
+    def percentGain(self) -> float:
         """ Calculates the percentage gain of the stock. """
         if self.currentValue[0] is not None:
-            return (self.currentValue - self.perShareCost()) / 100
+            return (self.currentValue - self.averageCost()) / 100
         else:
             return None
 
