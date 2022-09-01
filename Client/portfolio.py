@@ -1,106 +1,84 @@
 """
-Classes (see classess for more detail on specifics):
-    Equity: The abtract base class used in all of the subclasses of an Equity.
-
-
-Enums: 
-    CurrencyType: Used along side with the Currency class for later implementation. TODO
-
+These container classes do not store any type of market value besides the cost
+of the equities.
 """
 from typing import List, Dict
-import datetime
 from abc import ABC
-from enum import Enum
-from copy import deepcopy
-
+from copy import deepcopy, copy
 
 class Equity(ABC):
     """ Abstract base class that represents a equity """
-    def __init__(self, name: str, value: float, date_time: datetime.datetime = datetime.datetime.now()):
-        self.name = name
-        self._value_time = (value, date_time)
-    
-    def totalValueAndTime(self):
-        return self._value_time
-
-
-class CurrencyType(Enum):
-    USD = 0
-    EURO = 1
-
-
-class Currency(Equity):
-    def __init__(self, value: float, buyingPower: float = 0, type = CurrencyType.USD):
-        if buyingPower == 0:
-            self._buyingPower = value
-        super().__init__(type.name, value)
-
-    def updateBuyingPower(self, amount: float):
-        self._buyingPower = self._buyingPower - amount
-
-    def __str__(self):
-        frmt = f"Buying Power: {self._buyingPower}\nTotal Cash: ${self.totalValue()}"
-
-        return frmt
-
-    def updateValue(self, amount: float):
-        # Update the buying power if it was not already updated.
-        if self._buyingPower == self._value_time[0]:
-            self._buyingPower += amount
-        
-        self._value_time = (self._value_time[0] + amount, datetime.datetime.now())
-
-    def totalValue(self) -> float:
-        return self._value_time[0]
-
-    @property
-    def BuyingPower(self):
-        return self._buyingPower
+    def __init__(self, name: str, value: float):
+        self._name = name
+        self._totalCost = value
 
 class Stock(Equity):
     """
-    Field memembers:
-        _num_shares (int): the number of shares of the stock.
+    This is just a container to store the total cost, the average cost per share, the number of shares
+    and the ticker symbol of a specific stock.
 
-    Inherits field values: 
-        name (str): The ticker symbol for the stock.
-        _value_time (Tuple (float, datetime)): the value of the stock at a datetime.
+    Private memebers:
+        _numShares (int): The number of shares of the stock.
+        _totalCost (float): The total cost (number of shares * average cost per share)
+        _numShares (int): The total number of shares of the stock.
+        _name (str): Inherited from Equity is the ticker symbol of the stock.
     """
-    def __init__(self, purchase_cost_per_share: float, shares: int, ticker_symbol: str):
-        value = purchase_cost_per_share * shares
-        self._num_shares = shares
-        Equity.__init__(self, ticker_symbol.upper(), value)
-
-    def avgerageCost(self) -> float:
-        """ Returns the cost per share for the stock. """
-        return self.totalValue() / self._num_shares
-
-    def percentGain(self) -> float:
-        """ Calculates the percentage gain of the stock. """
-        if self.currentValue[0] is not None:
-            return (self.currentValue - self.averageCost()) / 100
-        else:
-            return None
-
-    def totalValue(self) -> float:
-        return self._value_time[0]
+    def __init__(self, ticker_symbol: str, purchase_cost_per_share: float, shares: int):
+        total_cost = purchase_cost_per_share * shares
+        self._avgCost = purchase_cost_per_share
+        self._numShares = shares
+        Equity.__init__(self, ticker_symbol.upper(), total_cost)
 
     def __str__(self):
-        frmt = f"""{self.name}\t{self.totalValue()}\t{self._num_shares}\t\t{(self.perShareCost()):.2f}\t\t{self.totalValueAndTime()[1]}"""
-
+        frmt = f"""{self.name}\t{self._totalCost}\t{self._numShares}\t\t{(self._avgCost):.2f}"""
         return frmt
+
+    def percentGain(self, currentValuePerShare: float) -> float:
+        """ Calculates the percentage gain of the stock and returns it as a float. """
+        return (currentValuePerShare - self._avgCost) / self._avgCost
+
+    def addShares(self, numShares: int, costPerShare: float):
+        """ 
+        Adds numShares to the number of shares for the Stock instance and updates the 
+        _totalCost, _numShares and _avgCost private members to reflect the added shares implact.
+        """
+        temp = self._totalCost + (numShares * costPerShare)
+        self._totalCost = temp
+        self._numShares += numShares
+        self._avgCost = temp / self._numShares
+
+    def removeShares(self, numShares: int):
+        """ 
+        Remove numShares from the Stock instance and updates the total cost of shares. 
+        Raises InvalidRemovalOfSharesException if numShares is greater than the number of shares
+        stored in the Stock instance.
+        """
+        # Exception if there are more more shares removed than there currently are.
+        if numShares > self._numShares:
+            raise InvalidRemovalOfSharesException(f"There {self.NumShares} of {self.TickerSymbol}. Tried to remove {numShares}")
+
+        self._numShares -= numShares
+        self._totalCost = self._numShares * self._avgCost
+        
+    @property
+    def AvgCost(self) -> float:
+        """ Get the average cost per share of the stock. """
+        return self._avgCost
+    
+    @property
+    def TotalCost(self) -> float:
+        """ Get the total cost of all the shares. """
+        return self._totalCost
 
     @property
     def NumShares(self):
-        return self._num_shares
+        """ Get the number of shares for the Stock instance. """
+        return self._numShares
 
     @property
-    def Ticker(self):
-        return self.name
-
-    def UpdateValueAndTime(self, value: float, time: datetime.datetime = datetime.datetime.now()) -> None:
-        # value is number of shares * current price the stock is valued at.
-        self._value_time = (value, time)
+    def TickerSymbol(self):
+        """ Get the ticker symbol for the stock instance. """
+        return self._name
 
 """
 class Option(Equity):
@@ -113,101 +91,61 @@ class Option(Equity):
         self.type = type
 """
 
-class OrderCode(Enum):
-    CANT_AFFORD = -3
-    INCORRECT_AMOUNT = -2
-    STOCK_NOT_IN_PORTFOLIO = -1
-    SUCCESS = 0
+class InvalidRemovalOfSharesException(Exception):
+    """ 
+    Indicates that the user has created an invalid removal of shares, such as more
+    shares than are currently available.
+    """
+    def __init__(self, message):
+        super().__init__(message)
+
+class InsufficientFundsException(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
 
 class Portfolio:
-    def __init__(self, cash: Currency, stocks: Dict[str, Stock] = {}):
-        self._stocks = deepcopy(stocks)
-        self._cash = cash
-        self._totalValue = cash.totalValueAndTime()[0]
-        
-        if len(stocks):
-            for ticker in stocks.keys():
-                self._totalValue += stocks[ticker].totalValue()
-
-        #self._options = []
-        
-    @property
-    def Cash(self):
-        return deepcopy(self._cash)
+    """ 
+    Container for settled cash available for investment, net cash, and stocks.
     
-    @property
-    def Stocks(self):
-        return deepcopy(self._stocks)
+    private members:
+        _stocks: a dictionary that maps a ticker symbol to a Stock instance. Stocks should only be
+                added through the addStock method, so the program can map the ticker symbols to the 
+                correct stock.
 
-    def appendStocks(self, item: Stock):
-        assert(type(Stock) == type(Stock))
-        self._stocks.append(item)
+        _cashForInvestment (float): the amount of cash that is settled and available to purchase investments.
+                This does not always mean the total cash in the Portfolio.
 
-    def removeStocks(self, item: Stock):
-        assert(type(item) == type(Stock))
-        self._stocks.remove(item)
+        _netCash (float): all the cash that is in the portfolio including cash not available for investment.
+    """
+    def __init__(self, cashForInvestment: float, netCash: float, stocks: List[Stock] = []):
+        self._stocks: Dict[str, Stock] = {}
 
-    def SellStock(self, ticker_symbol: str, amount: int, sell_value: float) -> OrderCode:
-        # Check if the portfolio contains the stock being sold 
-        if ticker_symbol not in self._stocks:
-            return OrderCode.STOCK_NOT_IN_PORTFOLIO
+        for st in stocks:
+            self._stocks[st.TickerSymbol] = Stock(st.TickerSymbol, st.AvgCost, st.NumShares)
 
-        stock = self._stocks[ticker_symbol]
-        cash = self._cash
-        if amount < stock.NumShares:
-            stock._num_shares -= amount
-            stock.UpdateValueAndTime(sell_value * stock.NumShares)
-            cash._value_time = ((amount * sell_value) + cash._value_time[0], datetime.datetime.now())
-
-        elif amount == stock.NumShares:
-            stock._num_shares -= amount
-            cash._value_time = ((amount * sell_value) + cash._value_time[0], datetime.datetime.now())
-            self._stocks.pop(ticker_symbol)
-
-        else:
-            return OrderCode.INCORRECT_AMOUNT
-
-        return OrderCode.SUCCESS        
-
-    def BoughtStock(self, ticker_symbol: str, amount: int, buy_val: float) -> OrderCode.CANT_AFFORD:
-        # Check if the amount of stock can be purchased with the amount of buying power
-        if amount * buy_val > self.Cash.BuyingPower:
-            return OrderCode.CANT_AFFORD
+        self._cashForInvestment = cashForInvestment
+        self._netCash = netCash
         
-        # Check if the stock is already owned and update amount of shares owned
-        if ticker_symbol in self._stocks:
-            stock = self._stocks[ticker_symbol]
-            stock._num_shares += amount
-
-            # Update the stock value
-            stock.UpdateValueAndTime(amount * buy_val, datetime.datetime.now()) 
-        else:
-            self._stocks[ticker_symbol] = Stock(buy_val, amount, ticker_symbol)
-
-        # Update the cash amount
-        self._cash.updateValue(-(amount * buy_val))
-
-        return OrderCode.SUCCESS
-
-    """
-    TODO: Add options later.
-
-    def appendOptions(self, item: Option):
-        assert type(Option) == type(Option)
-        self.__options.append(item)
-    
-    def removeOpetion(self, item: Option):
-        assert type(item) == type(Stock)
-        self.__stocks.remove(item)
-    """
-
-
     def __str__(self):
         frmt = f"Type\tEquity\t# Shares\tCurrentValue\tLastQuery\n"
         for equity in self._stocks:
             frmt += str(equity) + '\n'
     
         return frmt
+    
+    @property
+    def CashForInvestment(self):
+        return self._cashForInvestment
+    
+    @property
+    def NetCash(self):
+        return self._netCash
+    
+    @property
+    def Stocks(self) -> Dict[str, Stock]:
+        return deepcopy(self._stocks)
 
     def PrintPortfolio(self) -> None:
         # Print the cash amount
@@ -224,14 +162,51 @@ class Portfolio:
 
         print(divider)
 
+    def buyStock(self, tickerSymbol: str, numShares: int, perShareCost: float):
+        """ Add a stock to the Porfolio instance. """
+        # Check to see if there are enough funds available to purchase the amount of shares requested.
+        if self._cashForInvestment - (numShares * perShareCost) < 0:
+            raise InsufficientFundsException("Not enough net cash to purchase the number of shares requested.")
+
+        # Check if ticker Symbol is in the _stocks dictionary.  
+        if tickerSymbol in self._stocks:
+            # add shares to existing symbol
+            stock = self._stocks[tickerSymbol]
+            stock.addShares(numShares, perShareCost)
+        else:
+            # Otherwise, add a new stock symbol to the _stocks dictionrary
+            self._stocks[tickerSymbol] = Stock(tickerSymbol, perShareCost, numShares)
+
+        # Update net cash and the cash for investments.
+        self._netCash -= numShares * perShareCost
+        self._cashForInvestment -= numShares * perShareCost
+
+    def sellStock(self, tickerSymbol: str, numShares: int, sellValue: float):
+        """ 
+        Raises a KeyError if the tickerSymbol is not a key in the stocks dictionary.
+        Raises a InvalidRemovalOfSharesException if numShares is greater than the number of shares
+        stored in the stock instance mapped from tickerSymbol.
+        """
+        stock = self._stocks[tickerSymbol]
+
+        # Remove the stock if we no longer own any shares. Otherwise update number of shares.
+        if numShares == stock.NumShares:
+            self._stocks.pop(tickerSymbol)
+        else:
+            stock.removeShares(numShares)
+
+        # Update net cash. 
+        self._netCash += numShares * sellValue
+
     """
-    def currentValues(self, symbol_value: dict):
-        for symbol in self.equities:
-            try:
-                symbol.currentValue[0] = symbol_value[symbol.name]
-                symbol.currentValue[1] = datetime.datetime.now()
-                
-            except KeyError:
-                print(f"Error updating {symbol.name}")
-                pass
+    TODO: Add options later.
+
+    def appendOptions(self, item: Option):
+        assert type(Option) == type(Option)
+        self.__options.append(item)
+    
+    def removeOpetion(self, item: Option):
+        assert type(item) == type(Stock)
+        self.__stocks.remove(item)
     """
+

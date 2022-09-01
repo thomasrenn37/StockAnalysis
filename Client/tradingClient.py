@@ -1,5 +1,4 @@
 import configparser
-from email.quoprimime import quote
 from rauth import OAuth1Service
 from typing import List
 import json
@@ -8,13 +7,16 @@ import os.path
 import webbrowser
 import datetime
 
-# User defined libraries
 from Client.portfolio import Portfolio
 
 
 def printJson(jsonObj):
     """ Helper function for debugging."""
     print(json.dumps(jsonObj, indent=4))
+
+def writeJsonToFile(jsonObj, fileName: str):
+    with open(fileName, "w") as fp:
+        fp.write(json.dumps(jsonObj, indent=4))
 
 
 class TradingClient(ABC):
@@ -216,11 +218,15 @@ class EtradeClient(TradingClient):
         # Create and verify an oath session.
         self._session = self.__Authorize()
 
+        print("-----------------------------------------------")
+        
         # Populate the portfolio container with current values.
-        #self._porfolio = self.__getPortfolio()
+        self._portfolio = None
+        self.__getPortfolio()
+        
 
     def __str__(self):
-        message = f"""Etrade Client\n{self._porfolio}"""
+        message = f"""Etrade Client\n{self._portfolio}"""
         return message
 
     def __Authorize(self):
@@ -257,6 +263,11 @@ class EtradeClient(TradingClient):
 
         return session
     
+    def _listAccouunts(self):
+        response = self._session.get(self._base_url + "/v1/accounts/list.json")
+        return response.json()
+
+
     # -------------------------------------
     # Stock Quote Methods -----------------
     # -------------------------------------
@@ -287,7 +298,7 @@ class EtradeClient(TradingClient):
             quotes.append(EtradeStockQuoteAll(q))
 
         return quotes
-        
+
     """
     def _getOptionChain(self, tickerSymbol: str):
         url = self._base_url + "/v1/market/optionschains?symbol={" + tickerSymbol + "}"
@@ -310,35 +321,44 @@ class EtradeClient(TradingClient):
         accountURL = self._base_url + f"/v1/accounts/{self._accountIdKey}"
         balanceURL = accountURL + f"/balance.json"
         portfolioURL = accountURL + f"/portfolio.json"
-        
-        # Initialize the Portfolio container
-        port = p.Portfolio()
 
         # Get the cash balance for the Portfolio container
         params = {"instType": "BROKERAGE", "realTimeNAV": "true"}
         response = self._session.get(balanceURL, params=params)
         data = response.json()
-
-        if data is not None and "BalanceResponse" in data:
-            computed = data["BalanceResponse"]["Computed"]
-            investableCash = computed["cashAvailableForInvestment"]
-            netCash = computed["netCash"]
-            c = p.Cash(netCash)
-            port.append(c)
-        else:
+        
+        if data is None and "BalanceResponse" not in data:
             raise NotImplementedError("Error retreiving the balance response")
+            
+        computed_dict = data["BalanceResponse"]["Computed"]
+            
+        # Only want to use funds that are settled for purchasing stocks
+        # to avoid Pattern Day Trading issues.
+        investableCash = computed_dict["settledCashForInvestment"]
+        netCash = computed_dict["netCash"]
 
-        # Get portfolio items
+        
+        """
+        # Get stocks.
         response = self._session.get(portfolioURL)
         if response.status_code == 200:
             data = response.json()
+            writeJsonToFile(data, "portFile.json")
         elif response.status_code == 204: # No data in response
-            self._porfolio = port
+            print("No response: " + response.text)
             return
         else:
             raise Exception("Error retreiving the portfolio values response")
+        """
 
-        # TODO: Append portfolio value to portfolio container
+        # Initialize the Portfolio container
+        self._portfolio = Portfolio(investableCash, netCash)
+        
+        print(self._portfolio.CashForInvestment, self._portfolio.NetCash)
+        
+
+
+
 
     def UpdatePortfolioValue(self, tickerSymbols: List[str]) -> None:
         """ Returns a dictionary of the values of the given stock symbols """
@@ -377,7 +397,6 @@ class EtradeClient(TradingClient):
         response = self._session.put(url, data={"accountIdKey": orderID})
         if response.status_code != 200:
             raise StatusCodeError(f"Status code: <{response.status_code}>.")
-
         return
 
     def changeOrder(self, orderNumber: str):
@@ -416,7 +435,7 @@ class EtradeClient(TradingClient):
             return
     
         # Update buying power
-        self._porfolio.Cash
+        self._portfolio.Cash
 
         # If successful, update portfolio
 
@@ -446,4 +465,9 @@ class ClientAuthorizationError(Exception):
 class StatusCodeError(Exception):
     def __init__(self, status_code):
         self.message = f"Request Status Code Error Number: {status_code}"
+        super().__init__(self.message)
+
+class InsufficientFundsException(Exception):
+    def __init__(self):
+        self.message = f"Not enough available funds to place the trade."
         super().__init__(self.message)
