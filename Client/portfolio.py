@@ -30,7 +30,7 @@ class Stock(Equity):
         Equity.__init__(self, ticker_symbol.upper(), total_cost)
 
     def __str__(self):
-        frmt = f"""{self.name}\t{self._totalCost}\t{self._numShares}\t\t{(self._avgCost):.2f}"""
+        frmt = f"""{self._name}\t{self._totalCost}\t{self._numShares}\t\t{(self._avgCost):.2f}"""
         return frmt
 
     def percentGain(self, currentValuePerShare: float) -> float:
@@ -129,9 +129,9 @@ class Portfolio:
         self._netCash = netCash
         
     def __str__(self):
-        frmt = f"Type\tEquity\t# Shares\tCurrentValue\tLastQuery\n"
-        for equity in self._stocks:
-            frmt += str(equity) + '\n'
+        frmt = f"Type\tEquity\t# Shares\tCostPerShare\n"
+        for key in self._stocks:
+            frmt += str(self._stocks[key]) + '\n'
     
         return frmt
     

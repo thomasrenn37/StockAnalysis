@@ -2,7 +2,7 @@ from Client.tradingClient import EtradeClient
 import time
 
 def main():
-    client = EtradeClient(False)
+    client = EtradeClient()
 
     """
     tickers = ['TGT', 'VYM', 'INTC', 'BROS', 'NFLX']

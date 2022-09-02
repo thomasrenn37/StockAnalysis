@@ -7,7 +7,7 @@ import os.path
 import webbrowser
 import datetime
 
-from Client.portfolio import Portfolio
+from Client.portfolio import Portfolio, Stock
 
 
 def printJson(jsonObj):
@@ -312,7 +312,7 @@ class EtradeClient(TradingClient):
     # Portfolio/Account Methods -------------
     # ---------------------------------------
 
-    def __getPortfolio(self) -> Portfolio:
+    def __getPortfolio(self):
         """ 
         Returns a Portfolio object of the current account specified in the
         instance of the EtradeClient class.   
@@ -336,45 +336,31 @@ class EtradeClient(TradingClient):
         # to avoid Pattern Day Trading issues.
         investableCash = computed_dict["settledCashForInvestment"]
         netCash = computed_dict["netCash"]
-
         
-        """
         # Get stocks.
         response = self._session.get(portfolioURL)
         if response.status_code == 200:
             data = response.json()
-            writeJsonToFile(data, "portFile.json")
+            stocks = []
+
+            # Iterate through the positions for the account.
+            for position in data["PortfolioResponse"]["AccountPortfolio"][0]["Position"]:
+                tickerSymbol = position["Product"]["symbol"]
+                costPerShare = position["costPerShare"]
+                numShares = position["quantity"]
+                stocks.append(Stock(tickerSymbol, costPerShare, numShares))
+
         elif response.status_code == 204: # No data in response
-            print("No response: " + response.text)
-            return
+            stocks = []
         else:
             raise Exception("Error retreiving the portfolio values response")
-        """
 
         # Initialize the Portfolio container
-        self._portfolio = Portfolio(investableCash, netCash)
-        
-        print(self._portfolio.CashForInvestment, self._portfolio.NetCash)
-        
+        self._portfolio = Portfolio(investableCash, netCash, stocks)
 
+    def UpdatePortfolio(self):
+        self.__getPortfolio()
 
-
-
-    def UpdatePortfolioValue(self, tickerSymbols: List[str]) -> None:
-        """ Returns a dictionary of the values of the given stock symbols """
-        data = self._getStockQuote(tickerSymbols)
-        #print(data)
-        
-        # TODO: Fix for all ticker symbols once real data available
-
-        allItems = data['QuoteResponse']['QuoteData'][0]["All"]
-        productName = data['QuoteResponse']['QuoteData'][0]["Product"]['symbol']
-        value = allItems["ask"]
-        
-        symbol_value = {productName: value}
-        # Parse the json object for the current value and datetime
-
-        self.portfolio.currentValues(symbol_value) 
 
     # -------------------------------------
     # Order Methods -----------------------
